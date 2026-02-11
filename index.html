@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnostic Echipamente Termice</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container { max-width: 1400px; margin: 0 auto; }
+
+        header {
+            background: white;
+            padding: 25px 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        h1 { color: #667eea; font-size: 2.2em; margin-bottom: 5px; }
+        .subtitle { color: #888; font-size: 1em; }
+
+        /* ── TABS ── */
+        .tabs-wrapper {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 3px solid #f0f0f0;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 18px 10px;
+            border: none;
+            background: white;
+            font-size: 1.05em;
+            font-weight: 600;
+            cursor: pointer;
+            color: #999;
+            transition: all 0.3s;
+            border-bottom: 4px solid transparent;
+            margin-bottom: -3px;
+        }
+
+        .tab-btn:hover { color: #667eea; background: #f8f8ff; }
+
+        .tab-btn.active { color: #667eea; border-bottom-color: #667eea; background: white; }
+
+        .tab-btn.tab-centrale.active  { color: #667eea; border-bottom-color: #667eea; }
+        .tab-btn.tab-pompe.active     { color: #e67e22; border-bottom-color: #e67e22; }
+        .tab-btn.tab-aer.active       { color: #27ae60; border-bottom-color: #27ae60; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* ── MAIN GRID ── */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        .section {
+            background: white;
+            padding: 28px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .section h2 {
+            margin-bottom: 20px;
+            font-size: 1.6em;
+            padding-bottom: 10px;
+        }
+
+        .centrale h2  { color: #667eea; border-bottom: 3px solid #667eea; }
+        .pompe h2     { color: #e67e22; border-bottom: 3px solid #e67e22; }
+        .aer h2       { color: #27ae60; border-bottom: 3px solid #27ae60; }
+
+        /* ── FORM ── */
+        .form-group { margin-bottom: 18px; }
+
+        label {
+            display: block;
+            margin-bottom: 7px;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        input[type="text"], select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1em;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+
+        .centrale input:focus, .centrale select:focus, .centrale textarea:focus {
+            outline: none; border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        }
+        .pompe input:focus, .pompe select:focus, .pompe textarea:focus {
+            outline: none; border-color: #e67e22;
+            box-shadow: 0 0 0 3px rgba(230,126,34,0.1);
+        }
+        .aer input:focus, .aer select:focus, .aer textarea:focus {
+            outline: none; border-color: #27ae60;
+            box-shadow: 0 0 0 3px rgba(39,174,96,0.1);
+        }
+
+        textarea { min-height: 115px; resize: vertical; }
+
+        /* ── BUTTONS ── */
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.05em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .btn:disabled { background: #ccc !important; cursor: not-allowed; transform: none !important; }
+
+        .btn-centrale { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+        .btn-centrale:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(102,126,234,0.4); }
+
+        .btn-pompe { background: linear-gradient(135deg, #e67e22, #d35400); color: white; }
+        .btn-pompe:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(230,126,34,0.4); }
+
+        .btn-aer { background: linear-gradient(135deg, #27ae60, #1e8449); color: white; }
+        .btn-aer:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(39,174,96,0.4); }
+
+        /* ── SEARCH FILTERS ── */
+        .search-filters {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 5px;
+        }
+
+        /* ── RESULTS ── */
+        .results-container {
+            max-height: 580px;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+
+        .results-container::-webkit-scrollbar { width: 7px; }
+        .results-container::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        .results-container::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
+
+        .result-card {
+            background: #f8f9fa;
+            padding: 18px;
+            border-radius: 10px;
+            margin-bottom: 14px;
+            transition: all 0.3s;
+        }
+
+        .result-card:hover { transform: translateX(4px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+        .centrale .result-card  { border-left: 5px solid #667eea; }
+        .pompe .result-card     { border-left: 5px solid #e67e22; }
+        .aer .result-card       { border-left: 5px solid #27ae60; }
+
+        .result-brand {
+            display: inline-block;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.88em;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .centrale .result-brand  { background: #667eea; }
+        .pompe .result-brand     { background: #e67e22; }
+        .aer .result-brand       { background: #27ae60; }
+
+        .result-model {
+            font-size: 1.05em;
+            color: #333;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .result-label {
+            font-weight: 600;
+            font-size: 0.9em;
+            margin-bottom: 4px;
+        }
+
+        .centrale .result-label  { color: #667eea; }
+        .pompe .result-label     { color: #e67e22; }
+        .aer .result-label       { color: #27ae60; }
+
+        .result-text {
+            color: #555;
+            line-height: 1.6;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            font-size: 0.95em;
+            margin-bottom: 10px;
+        }
+
+        .stat-badge {
+            display: inline-block;
+            background: #e9ecef;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        /* ── MESSAGES ── */
+        .success-message {
+            background: #51cf66; color: white;
+            padding: 13px; border-radius: 10px;
+            margin-bottom: 16px; display: none;
+            font-weight: 600;
+        }
+
+        .error-message {
+            background: #ff6b6b; color: white;
+            padding: 13px; border-radius: 10px;
+            margin-bottom: 16px; display: none;
+            font-weight: 600;
+        }
+
+        /* ── EMPTY STATE ── */
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: #bbb;
+        }
+
+        .empty-state-icon { font-size: 3.5em; margin-bottom: 15px; }
+        .empty-state-text { font-size: 1.1em; margin-bottom: 6px; color: #999; }
+        .empty-state-subtext { font-size: 0.9em; }
+
+        .loading { text-align: center; padding: 30px; color: #667eea; font-size: 1.05em; }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 1024px) {
+            .main-content { grid-template-columns: 1fr; }
+            .search-filters { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 1.6em; }
+            .tab-btn { font-size: 0.85em; padding: 14px 6px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <header>
+        <h1>🔧 Diagnostic Echipamente Termice</h1>
+        <p class="subtitle">Centrale · Pompe de căldură · Aer Condiționat</p>
+    </header>
+
+    <!-- TABS -->
+    <div class="tabs-wrapper">
+        <div class="tabs">
+            <button class="tab-btn tab-centrale active" onclick="switchTab('centrale')">🔥 Centrale Termice</button>
+            <button class="tab-btn tab-pompe"           onclick="switchTab('pompe')">♨️ Pompe de Căldură</button>
+            <button class="tab-btn tab-aer"             onclick="switchTab('aer')">❄️ Aer Condiționat</button>
+        </div>
+    </div>
+
+    <!-- ===================== TAB: CENTRALE ===================== -->
+    <div id="tab-centrale" class="tab-content active">
+        <div class="main-content">
+
+            <div class="section centrale">
+                <h2>🔍 Caută intervenții</h2>
+                <div class="search-filters">
+                    <div class="form-group">
+                        <label>Marcă</label>
+                        <select onchange="searchCases('centrale')">
+                            <option value="">Toate mărcile</option>
+                            <option value="Ariston">Ariston</option>
+                            <option value="Viessmann">Viessmann</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Model</label>
+                        <input type="text" placeholder="Caută model..." oninput="searchCases('centrale')">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Caută în defecte și rezolvări</label>
+                    <input type="text" placeholder="Ex: nu pornește, E01, pompă blocată..." oninput="searchCases('centrale')">
+                </div>
+                <div class="results-container" id="results-centrale">
+                    <div class="loading">Se încarcă datele...</div>
+                </div>
+            </div>
+
+            <div class="section centrale">
+                <h2>➕ Adaugă intervenție</h2>
+                <div id="success-centrale" class="success-message">✅ Salvat cu succes!</div>
+                <div id="error-centrale"   class="error-message">❌ Eroare la salvare!</div>
+                <form onsubmit="saveCase(event, 'centrale')">
+                    <div class="form-group">
+                        <label>Marcă *</label>
+                        <select required>
+                            <option value="">Selectează marca</option>
+                            <option value="Ariston">Ariston</option>
+                            <option value="Viessmann">Viessmann</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Model *</label>
+                        <input type="text" placeholder="Ex: Clas One 24, Vitodens 200-W" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Defect / Simptom *</label>
+                        <textarea placeholder="Cod eroare, simptome observate..." required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Rezolvare *</label>
+                        <textarea placeholder="Ce ai făcut, piese înlocuite..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-centrale">💾 Salvează intervenția</button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ===================== TAB: POMPE DE CĂLDURĂ ===================== -->
+    <div id="tab-pompe" class="tab-content">
+        <div class="main-content">
+
+            <div class="section pompe">
+                <h2>🔍 Caută intervenții</h2>
+                <div class="search-filters">
+                    <div class="form-group">
+                        <label>Marcă</label>
+                        <select onchange="searchCases('pompe')">
+                            <option value="">Toate mărcile</option>
+                            <option value="Ariston">Ariston</option>
+                            <option value="Immergas">Immergas</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Model</label>
+                        <input type="text" placeholder="Caută model..." oninput="searchCases('pompe')">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Caută în defecte și rezolvări</label>
+                    <input type="text" placeholder="Ex: nu pornește, eroare senzor, freon..." oninput="searchCases('pompe')">
+                </div>
+                <div class="results-container" id="results-pompe">
+                    <div class="loading">Se încarcă datele...</div>
+                </div>
+            </div>
+
+            <div class="section pompe">
+                <h2>➕ Adaugă intervenție</h2>
+                <div id="success-pompe" class="success-message">✅ Salvat cu succes!</div>
+                <div id="error-pompe"   class="error-message">❌ Eroare la salvare!</div>
+                <form onsubmit="saveCase(event, 'pompe')">
+                    <div class="form-group">
+                        <label>Marcă *</label>
+                        <select required>
+                            <option value="">Selectează marca</option>
+                            <option value="Ariston">Ariston</option>
+                            <option value="Immergas">Immergas</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Model *</label>
+                        <input type="text" placeholder="Ex: Nimbus Plus, Audax" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Defect / Simptom *</label>
+                        <textarea placeholder="Cod eroare, simptome observate..." required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Rezolvare *</label>
+                        <textarea placeholder="Ce ai făcut, piese înlocuite..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-pompe">💾 Salvează intervenția</button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ===================== TAB: AER CONDIȚIONAT ===================== -->
+    <div id="tab-aer" class="tab-content">
+        <div class="main-content">
+
+            <div class="section aer">
+                <h2>🔍 Caută intervenții</h2>
+                <div class="form-group">
+                    <label>Caută după marcă, model</label>
+                    <input type="text" placeholder="Ex: Daikin, Samsung, Mitsubishi..." oninput="searchCases('aer')">
+                </div>
+                <div class="form-group">
+                    <label>Caută în defecte și rezolvări</label>
+                    <input type="text" placeholder="Ex: nu răcește, H6, scurgere freon..." oninput="searchCases('aer')">
+                </div>
+                <div class="results-container" id="results-aer">
+                    <div class="loading">Se încarcă datele...</div>
+                </div>
+            </div>
+
+            <div class="section aer">
+                <h2>➕ Adaugă intervenție</h2>
+                <div id="success-aer" class="success-message">✅ Salvat cu succes!</div>
+                <div id="error-aer"   class="error-message">❌ Eroare la salvare!</div>
+                <form onsubmit="saveCase(event, 'aer')">
+                    <div class="form-group">
+                        <label>Marcă și Model *</label>
+                        <input type="text" placeholder="Ex: Daikin FTXC35C, Samsung AR09, Mitsubishi MSZ-HR25VF" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Defect / Simptom *</label>
+                        <textarea placeholder="Cod eroare, simptome observate..." required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Rezolvare *</label>
+                        <textarea placeholder="Ce ai făcut, piese înlocuite..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-aer">💾 Salvează intervenția</button>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+</div><!-- end container -->
+
+<script>
+// ============================================================
+// CONFIGURARE — pune URL-ul tău Google Apps Script aici
+// ============================================================
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbytmxCJxzbo6KlUGICoEe0Br70p-1qWjS_BC3lYMISmM5Na8fMn_hTXrGyyn4nHVMuz/exec';
+
+// Cache local pentru fiecare tab
+const db = { centrale: [], pompe: [], aer: [] };
+
+// Numele sheet-urilor din Google Sheets (trebuie să existe în spreadsheet!)
+const SHEETS = {
+    centrale : 'Centrale',
+    pompe    : 'Pompe',
+    aer      : 'Aer'
+};
+
+// ============================================================
+// SWITCH TAB
+// ============================================================
+function switchTab(tab) {
+    // Schimbă tab-ul IMEDIAT, indiferent de starea datelor
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    document.querySelector('.tab-' + tab).classList.add('active');
+
+    // Încarcă datele doar dacă nu sunt deja în cache
+    if (db[tab].length === 0) {
+        loadData(tab);
+    }
+}
+
+// ============================================================
+// ÎNCĂRCARE DATE DIN GOOGLE SHEETS
+// ============================================================
+// ============================================================
+// ÎNCĂRCARE DATE DIN GOOGLE SHEETS
+// ============================================================
+async function loadData(tab) {
+    const container = document.getElementById('results-' + tab);
+    container.innerHTML = '<div class="loading">Se încarcă datele...</div>';
+
+    // Timeout de 8 secunde - dacă nu răspunde, afișează empty state
+    const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Timeout')), 8000)
+    );
+
+    try {
+        const fetchPromise = fetch(`${GOOGLE_SCRIPT_URL}?sheet=${SHEETS[tab]}`);
+        const res  = await Promise.race([fetchPromise, timeoutPromise]);
+        const rows = await res.json();
+
+        // Dacă nu sunt date sau doar header
+        if (!rows || rows.length <= 1) {
+            db[tab] = [];
+            renderCases(tab, []);
+            return;
+        }
+
+        db[tab] = rows.slice(1).map((row, i) => ({
+            id      : i + 1,
+            brand   : row[0] || '',
+            model   : row[1] || '',
+            defect  : row[2] || '',
+            solution: row[3] || '',
+            date    : row[4] || ''
+        })).filter(item => item.brand || item.model); // elimină rânduri goale
+
+        renderCases(tab, db[tab]);
+    } catch (err) {
+        console.error('Eroare load ' + tab + ':', err);
+        // Nu bloca pagina - arată empty state
+        db[tab] = [];
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">⚠️</div>
+                <div class="empty-state-text">Nu s-au putut încărca datele</div>
+                <div class="empty-state-subtext">Verifică URL-ul Google Script sau conexiunea</div>
+            </div>`;
+    }
+}
+
+// ============================================================
+// SALVARE INTERVENȚIE
+// ============================================================
+async function saveCase(event, tab) {
+    event.preventDefault();
+    const form    = event.target;
+    const inputs  = form.querySelectorAll('select, input[type="text"], textarea');
+    const btn     = form.querySelector('button[type="submit"]');
+    const succEl  = document.getElementById('success-' + tab);
+    const errEl   = document.getElementById('error-'   + tab);
+
+    btn.disabled    = true;
+    btn.textContent = '⏳ Se salvează...';
+
+    const payload = {
+        sheet   : SHEETS[tab],
+        brand   : tab === 'aer' ? inputs[0].value : inputs[0].value,
+        model   : tab === 'aer' ? inputs[0].value : inputs[1].value,
+        defect  : tab === 'aer' ? inputs[1].value : inputs[2].value,
+        solution: tab === 'aer' ? inputs[2].value : inputs[3].value,
+        date    : new Date().toLocaleDateString('ro-RO')
+    };
+
+    try {
+        await fetch(GOOGLE_SCRIPT_URL, {
+            method : 'POST',
+            mode   : 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body   : JSON.stringify(payload)
+        });
+
+        succEl.style.display = 'block';
+        setTimeout(() => succEl.style.display = 'none', 3000);
+        form.reset();
+
+        // Golește cache-ul și reîncarcă
+        db[tab] = [];
+        setTimeout(() => loadData(tab), 1200);
+
+    } catch (err) {
+        errEl.style.display = 'block';
+        setTimeout(() => errEl.style.display = 'none', 3000);
+    } finally {
+        btn.disabled    = false;
+        btn.textContent = '💾 Salvează intervenția';
+    }
+}
+
+// ============================================================
+// CĂUTARE
+// ============================================================
+function searchCases(tab) {
+    const section = document.getElementById('tab-' + tab);
+
+    if (tab === 'aer') {
+        // La aer: primul input = marcă+model, al doilea = defecte/rezolvări
+        const allInputs = section.querySelectorAll('input[type="text"]');
+        const modelVal  = allInputs[0] ? allInputs[0].value.toLowerCase() : '';
+        const freeVal   = allInputs[1] ? allInputs[1].value.toLowerCase() : '';
+
+        const filtered = db[tab].filter(item => {
+            const matchModel = !modelVal ||
+                item.model.toLowerCase().includes(modelVal) ||
+                item.brand.toLowerCase().includes(modelVal);
+            const matchFree = !freeVal ||
+                item.defect.toLowerCase().includes(freeVal) ||
+                item.solution.toLowerCase().includes(freeVal);
+            return matchModel && matchFree;
+        });
+
+        renderCases(tab, filtered);
+        return;
+    }
+
+    // Centrale și Pompe — cu select marcă + input model + input liber
+    const selects  = section.querySelectorAll('.search-filters select');
+    const allInputs = section.querySelectorAll('input[type="text"]');
+
+    const brandVal = selects[0]   ? selects[0].value.toLowerCase()   : '';
+    const modelVal = allInputs[0] ? allInputs[0].value.toLowerCase() : '';
+    const freeVal  = allInputs[1] ? allInputs[1].value.toLowerCase() : '';
+
+    const filtered = db[tab].filter(item => {
+        const matchBrand = !brandVal || item.brand.toLowerCase() === brandVal;
+        const matchModel = !modelVal || item.model.toLowerCase().includes(modelVal);
+        const matchFree  = !freeVal  ||
+            item.defect.toLowerCase().includes(freeVal)   ||
+            item.solution.toLowerCase().includes(freeVal) ||
+            item.model.toLowerCase().includes(freeVal);
+        return matchBrand && matchModel && matchFree;
+    });
+
+    renderCases(tab, filtered);
+}
+
+// ============================================================
+// AFIȘARE REZULTATE
+// ============================================================
+function renderCases(tab, cases) {
+    const container = document.getElementById('results-' + tab);
+
+    if (cases.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">📋</div>
+                <div class="empty-state-text">Nicio intervenție găsită</div>
+                <div class="empty-state-subtext">Adaugă prima intervenție din formularul din dreapta</div>
+            </div>`;
+        return;
+    }
+
+    const sorted = [...cases].sort((a, b) => b.id - a.id);
+
+    container.innerHTML = sorted.map(item => `
+        <div class="result-card">
+            <span class="result-brand">${item.brand}</span>
+            <div class="result-model">${item.model}</div>
+
+            <div class="result-label">🔴 Defect:</div>
+            <div class="result-text">${item.defect}</div>
+
+            <div class="result-label">✅ Rezolvare:</div>
+            <div class="result-text">${item.solution}</div>
+
+            ${item.date ? `<span class="stat-badge">📅 ${item.date}</span>` : ''}
+        </div>
+    `).join('');
+}
+
+// ============================================================
+// PORNIRE — încarcă primul tab automat
+// ============================================================
+window.addEventListener('DOMContentLoaded', () => loadData('centrale'));
+</script>
+</body>
+</html>
